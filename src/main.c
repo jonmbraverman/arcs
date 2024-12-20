@@ -4,12 +4,14 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define PORT 8080
+#define PORT 8181
 #define BUFFER_SIZE 1024
 
-void handle_command(char *command) {
+void handle_command(char *command, char *response) {
     // Process the command here
     printf("Received command: %s\n", command);
+    // Create a response
+    snprintf(response, BUFFER_SIZE, "Command '%s' received and processed.", command);
 }
 
 int main() {
@@ -17,6 +19,7 @@ int main() {
     struct sockaddr_in address;
     int addrlen = sizeof(address);
     char buffer[BUFFER_SIZE] = {0};
+    char response[BUFFER_SIZE] = {0};
 
     // Creating socket file descriptor
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
@@ -49,7 +52,8 @@ int main() {
     while ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) >= 0) {
         int valread = read(new_socket, buffer, BUFFER_SIZE);
         if (valread > 0) {
-            handle_command(buffer);
+            handle_command(buffer, response);
+            send(new_socket, response, strlen(response), 0);
         }
         close(new_socket);
     }
